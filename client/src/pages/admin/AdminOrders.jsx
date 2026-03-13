@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { adminFetch } from "../../utils/adminFetch";
+import { adminApiRequest } from "../../utils/adminFetch";
 import Navbar from "../../components/common/Navbar";
 import { API_BASE } from "../../utils/apiBase";
 
@@ -38,7 +38,7 @@ export default function AdminOrders() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await adminFetch("/api/admin/orders");
+      const res = await adminApiRequest("/api/admin/orders");
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -58,7 +58,7 @@ export default function AdminOrders() {
   const fetchItems = async (orderCode) => {
     setItemsLoading(true);
     try {
-      const res = await adminFetch(`/api/admin/orders/${orderCode}/items`);
+      const res = await adminApiRequest(`/api/admin/orders/${orderCode}/items`);
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) return alert(data.message || "Failed to load items");
@@ -74,7 +74,7 @@ export default function AdminOrders() {
 
   const updateStatus = async (orderCode, status) => {
     try {
-      const res = await adminFetch(`/api/admin/orders/${orderCode}/status`, {
+      const res = await adminApiRequest(`/api/admin/orders/${orderCode}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
@@ -189,7 +189,14 @@ export default function AdminOrders() {
                   {openOrder === o.order_code ? "Hide Items" : "View Items 🍽️"}
                 </button>
 
-                <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    marginTop: 10,
+                    display: "flex",
+                    gap: 8,
+                    flexWrap: "wrap",
+                  }}
+                >
                   {STATUSES.map((s) => (
                     <button
                       key={s}
