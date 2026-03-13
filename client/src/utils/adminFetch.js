@@ -3,21 +3,23 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE;
 
-/**
- * Custom fetch wrapper for admin API calls
- * Automatically attaches admin key from localStorage
- */
 export async function adminApiRequest(endpoint, options = {}) {
   const adminToken = localStorage.getItem("PRITI_ADMIN_KEY");
+
+  const headers = {
+    "x-admin-key": adminToken || "",
+    ...(options.headers || {}),
+  };
+
+  // Do NOT set JSON header when sending FormData
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        "x-admin-key": adminToken || "",
-        ...(options.headers || {}),
-      },
+      headers,
     });
 
     if (!response.ok) {

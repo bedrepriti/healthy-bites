@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/common/Navbar";
-import { adminFetch } from "../../utils/adminFetch";
+import { adminApiRequest } from "../../utils/adminFetch";
 import { API_BASE } from "../../utils/apiBase";
 
 const CATEGORIES = ["Veg", "Non-Veg", "Vegan", "Lactose-Free"];
@@ -9,7 +9,7 @@ const CATEGORIES = ["Veg", "Non-Veg", "Vegan", "Lactose-Free"];
 function resolveImg(raw) {
   if (!raw) return "/assets/images/salad1.png";
   if (raw.startsWith("/uploads")) return `${API_BASE}${raw}`;
-  return raw; // full URL
+  return raw;
 }
 
 export default function AdminProducts() {
@@ -42,13 +42,12 @@ export default function AdminProducts() {
 
   useEffect(() => {
     if (requireAdmin()) fetchProducts();
-    // eslint-disable-next-line
   }, []);
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await adminFetch("/api/admin/products");
+      const res = await adminApiRequest("/api/admin/products");
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -83,7 +82,10 @@ export default function AdminProducts() {
     if (!requireAdmin()) return;
     if (!form.name || !form.price) return alert("Name + Price required");
 
-    const path = editing ? `/api/admin/products/${editing}` : `/api/admin/products`;
+    const path = editing
+      ? `/api/admin/products/${editing}`
+      : `/api/admin/products`;
+
     const method = editing ? "PUT" : "POST";
 
     const fd = new FormData();
@@ -93,10 +95,15 @@ export default function AdminProducts() {
     fd.append("tags", form.tags || "");
     fd.append("stock_qty", String(form.stock_qty || 0));
     fd.append("is_active", String(form.is_active ?? 1));
+
     if (imageFile) fd.append("image", imageFile);
 
     try {
-      const res = await adminFetch(path, { method, body: fd });
+      const res = await adminApiRequest(path, {
+        method,
+        body: fd,
+      });
+
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -116,9 +123,14 @@ export default function AdminProducts() {
     if (!requireAdmin()) return;
 
     try {
-      const res = await adminFetch(`/api/admin/products/${id}/toggle`, { method: "PATCH" });
+      const res = await adminApiRequest(
+        `/api/admin/products/${id}/toggle`,
+        { method: "PATCH" }
+      );
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok) return alert(data.message || "Toggle failed");
+
       fetchProducts();
     } catch {
       alert("Server not reachable");
@@ -129,14 +141,18 @@ export default function AdminProducts() {
     if (!requireAdmin()) return;
 
     try {
-      const res = await adminFetch(`/api/admin/products/${id}/stock`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stock_qty }),
-      });
+      const res = await adminApiRequest(
+        `/api/admin/products/${id}/stock`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stock_qty }),
+        }
+      );
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) return alert(data.message || "Stock update failed");
+
       fetchProducts();
     } catch {
       alert("Server not reachable");
@@ -148,9 +164,14 @@ export default function AdminProducts() {
     if (!confirm("Delete product?")) return;
 
     try {
-      const res = await adminFetch(`/api/admin/products/${id}`, { method: "DELETE" });
+      const res = await adminApiRequest(
+        `/api/admin/products/${id}`,
+        { method: "DELETE" }
+      );
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok) return alert(data.message || "Delete failed");
+
       fetchProducts();
     } catch {
       alert("Server not reachable");
@@ -159,6 +180,7 @@ export default function AdminProducts() {
 
   const startEdit = (p) => {
     setEditing(p.id);
+
     setForm({
       name: p.name || "",
       price: p.price || "",
@@ -170,7 +192,6 @@ export default function AdminProducts() {
 
     setImageFile(null);
 
-    // ✅ FIX: always resolve correct URL for preview (backend prefix if /uploads)
     const raw = p.image_url || p.image || "";
     setImagePreview(resolveImg(raw) + `?v=${Date.now()}`);
 
@@ -179,6 +200,7 @@ export default function AdminProducts() {
 
   const onPickImage = (file) => {
     setImageFile(file || null);
+
     if (!file) return setImagePreview("");
 
     if (file.size > 20 * 1024 * 1024) {
@@ -193,19 +215,24 @@ export default function AdminProducts() {
   return (
     <>
       <Navbar />
+
       <div className="container" style={{ maxWidth: 900 }}>
         <h2 style={{ margin: 0 }}>Admin Products</h2>
+
         <p style={{ marginTop: 6, color: "#555" }}>
           Add / Edit products + Image Upload + Stock + Sold Out
         </p>
 
-        {/* Form */}
+        {/* FORM */}
+
         <div className="card" style={{ padding: 14, marginTop: 14 }}>
+
           <div style={{ fontWeight: 900, marginBottom: 10 }}>
             {editing ? "Edit Product" : "Add Product"}
           </div>
 
           <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+
             <input
               className="input"
               placeholder="Name"
@@ -232,7 +259,7 @@ export default function AdminProducts() {
 
             <input
               className="input"
-              placeholder="Tags (comma or single)"
+              placeholder="Tags"
               value={form.tags}
               onChange={(e) => setForm({ ...form, tags: e.target.value })}
             />
@@ -254,37 +281,40 @@ export default function AdminProducts() {
             />
           </div>
 
-          {imagePreview ? (
+          {imagePreview && (
             <div style={{ marginTop: 12 }}>
-              <div style={{ fontWeight: 800, marginBottom: 6 }}>Preview</div>
               <img
                 src={imagePreview}
                 alt="preview"
-                style={{ width: 220, height: 140, borderRadius: 14, objectFit: "cover" }}
-                onError={(e) => (e.currentTarget.src = "/assets/images/salad1.png")}
+                style={{
+                  width: 220,
+                  height: 140,
+                  borderRadius: 14,
+                  objectFit: "cover",
+                }}
               />
-              <div style={{ fontSize: 12, color: "#777", marginTop: 6 }}>
-                {editing
-                  ? "Upload new image only if you want to replace the old one."
-                  : "This image will be stored on the server (no URL)."}
-              </div>
             </div>
-          ) : null}
+          )}
 
-          <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
             <button className="btn" onClick={submit}>
-              {editing ? "Save Changes ✅" : "Add Product ✅"}
+              {editing ? "Save Changes" : "Add Product"}
             </button>
 
             {editing && (
-              <button className="btn" style={{ background: "#777" }} onClick={resetForm}>
+              <button
+                className="btn"
+                style={{ background: "#777" }}
+                onClick={resetForm}
+              >
                 Cancel
               </button>
             )}
           </div>
         </div>
 
-        {/* List */}
+        {/* PRODUCT LIST */}
+
         <div style={{ marginTop: 16 }}>
           <div style={{ fontWeight: 900, marginBottom: 10 }}>
             Products {loading ? "(loading...)" : `(${products.length})`}
@@ -292,68 +322,119 @@ export default function AdminProducts() {
 
           <div style={{ display: "grid", gap: 12 }}>
             {products.map((p) => {
-              const soldOut = (p.stock_qty ?? 0) <= 0 || (p.is_active ?? 1) === 0;
+              const soldOut =
+                (p.stock_qty ?? 0) <= 0 || (p.is_active ?? 1) === 0;
 
               const raw = p.image_url || p.image || "";
-              const imgSrc = resolveImg(raw) + `?v=${p.updated_at || Date.now()}`;
+              const imgSrc =
+                resolveImg(raw) + `?v=${p.updated_at || Date.now()}`;
 
               return (
                 <div key={p.id} className="card" style={{ padding: 12 }}>
+
                   <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+
                     <img
                       src={imgSrc}
                       alt={p.name}
-                      style={{ width: 70, height: 55, borderRadius: 12, objectFit: "cover" }}
-                      onError={(e) => (e.currentTarget.src = "/assets/images/salad1.png")}
+                      style={{
+                        width: 70,
+                        height: 55,
+                        borderRadius: 12,
+                        objectFit: "cover",
+                      }}
                     />
 
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
                         <div style={{ fontWeight: 900 }}>
                           {p.name} {soldOut ? "❌" : "✅"}
                         </div>
-                        <div style={{ fontWeight: 900 }}>₹{p.price}</div>
+
+                        <div style={{ fontWeight: 900 }}>
+                          ₹{p.price}
+                        </div>
+
                       </div>
 
-                      <div style={{ marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <div
+                        style={{
+                          marginTop: 6,
+                          display: "flex",
+                          gap: 8,
+                          flexWrap: "wrap",
+                        }}
+                      >
                         <span className="chip">{p.category}</span>
                         <span className="chip">Stock: {p.stock_qty}</span>
-                        {p.tags ? <span className="chip">{p.tags}</span> : null}
-                        {soldOut ? <span className="chip danger">Sold Out</span> : null}
+                        {p.tags && <span className="chip">{p.tags}</span>}
+                        {soldOut && <span className="chip danger">Sold Out</span>}
                       </div>
+
                     </div>
+
                   </div>
 
-                  <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      marginTop: 10,
+                      flexWrap: "wrap",
+                    }}
+                  >
                     <button className="btn" onClick={() => startEdit(p)}>
-                      Edit ✏️
+                      Edit
                     </button>
 
-                    <button className="btn" style={{ background: "#111" }} onClick={() => toggle(p.id)}>
+                    <button
+                      className="btn"
+                      style={{ background: "#111" }}
+                      onClick={() => toggle(p.id)}
+                    >
                       Toggle Active
                     </button>
 
-                    <button className="btn" style={{ background: "#E74C3C" }} onClick={() => del(p.id)}>
-                      Delete 🗑️
+                    <button
+                      className="btn"
+                      style={{ background: "#E74C3C" }}
+                      onClick={() => del(p.id)}
+                    >
+                      Delete
                     </button>
 
                     <button
                       className="btn"
                       style={{ background: "#555" }}
                       onClick={() => {
-                        const val = prompt("Enter stock qty:", String(p.stock_qty ?? 0));
+                        const val = prompt(
+                          "Enter stock qty:",
+                          String(p.stock_qty ?? 0)
+                        );
+
                         if (val === null) return;
+
                         updateStock(p.id, Number(val || 0));
                       }}
                     >
                       Update Stock
                     </button>
+
                   </div>
+
                 </div>
               );
             })}
           </div>
+
         </div>
+
       </div>
     </>
   );
