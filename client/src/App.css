@@ -1,0 +1,49 @@
+/* =========================================
+   Healthy Bites - Application Layout
+   Author: Priti Bedre
+   Global App Structure Styles
+========================================= */
+
+/* Root application wrapper */
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 18px;
+  text-align: left;
+}
+
+/* Page wrapper (use if needed in pages) */
+.page-wrapper {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Standard container used across pages */
+.container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 12px;
+}
+
+/* Prevent layout overflow on small devices */
+body {
+  overflow-x: hidden;
+}
+
+/* Basic responsive spacing */
+@media (min-width: 768px) {
+  #root {
+    padding: 22px 28px;
+  }
+
+  .container {
+    max-width: 1100px;
+  }
+}
+
+/*
+Removed default Vite demo styles:
+- logo
+- react + vite animation
+- read-the-docs
+*/
