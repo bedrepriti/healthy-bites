@@ -7,9 +7,16 @@ const CATEGORIES = ["All", "Veg", "Non-Veg", "Vegan", "Lactose-Free"];
 
 function resolveImg(raw) {
   if (!raw) return "/assets/images/salad1.png";
-  if (raw.startsWith("/uploads")) return `${API_BASE}${raw}`;
-  return raw;
+
+  // Cloudinary or full URL
+  if (raw.startsWith("http")) return raw;
+
+  // old local uploads
+  if (raw.includes("uploads")) return `${API_BASE}/${raw.replace(/^\/+/, "")}`;
+
+  return "/assets/images/salad1.png";
 }
+
 
 function MenuSkeletonCard() {
   return (
