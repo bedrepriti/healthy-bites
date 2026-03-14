@@ -93,7 +93,8 @@ export default function Menu() {
     const soldOut = p.sold_out ?? Number(p.stock_qty || 0) <= 0;
     if (soldOut) return;
 
-    const imgSrc = resolveImg(p.image_url || p.image || "");
+    const imgSrc = resolveImg(p.image_url ?? p.image);
+
     const qty = getQty(p.id);
 
     if (qty === 0) {
