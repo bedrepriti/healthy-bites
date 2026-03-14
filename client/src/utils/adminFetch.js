@@ -1,8 +1,6 @@
-// Healthy Bites Admin API Helper
-// Author: Priti Bedre
+import { API_BASE } from "./apiBase";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE;
-
+// Admin API helper
 export async function adminApiRequest(endpoint, options = {}) {
   const adminToken = localStorage.getItem("PRITI_ADMIN_KEY");
 
@@ -11,19 +9,18 @@ export async function adminApiRequest(endpoint, options = {}) {
     ...(options.headers || {}),
   };
 
-  // Do NOT set JSON header when sending FormData
+  // Only set JSON header if body is NOT FormData
   if (!(options.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
+      const data = await response.json().catch(() => ({}));
+      const msg = data.message || `API Error: ${response.status}`;
+      throw new Error(msg);
     }
 
     return response;
