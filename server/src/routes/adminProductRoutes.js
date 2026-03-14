@@ -4,7 +4,7 @@ const router = express.Router();
 
 const multer = require("multer");
 const db = require("../config/db");
-const cloudinary = require("./cloudinary");// make sure path correct
+const cloudinary = require("../config/cloudinary");// make sure path correct
 const { requireAdmin } = require("../middlewares/adminMiddleware");
 
 // ✅ Multer memory storage (no /uploads folder needed)
