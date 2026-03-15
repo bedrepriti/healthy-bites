@@ -2,21 +2,37 @@ import Navbar from "../components/common/Navbar";
 import { useCart } from "../context/CartContext";
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../utils/apiBase";
-import salad1 from "../assets/salad1.png";
-import salad2 from "../assets/salad2.png";
-import salad3 from "../assets/salad3.png";
-import salad4 from "../assets/salad4.png";
+
+import salad1 from "../assets/images/salad1.png";
+import salad2 from "../assets/images/salad2.png";
+import salad3 from "../assets/images/salad3.png";
+import salad4 from "../assets/images/salad4.png";
+
 
 const CATEGORIES = ["All", "Veg", "Non-Veg", "Vegan", "Lactose-Free"];
 
-function resolveImg(raw) {
-  if (!raw) return salad1;
+/* FIXED IMAGE RESOLVER */
+function resolveImg(raw, id) {
 
-  if (raw.startsWith("http")) return raw;
+  // if backend sends full cloudinary / url image
+  if (raw && raw.startsWith("http")) {
+    return raw;
+  }
 
-  if (raw.includes("uploads")) return `${API_BASE}/${raw.replace(/^\/+/, "")}`;
+  // if backend sends uploads folder image
+  if (raw && raw.includes("uploads")) {
+    return `${API_BASE}/${raw.replace(/^\/+/, "")}`;
+  }
 
-  return salad1;
+  // fallback local images
+  const localImages = {
+    1: salad1,
+    2: salad2,
+    3: salad3,
+    4: salad4
+  };
+
+  return localImages[id] || salad1;
 }
 
 function MenuSkeletonCard() {
@@ -77,7 +93,8 @@ export default function Menu() {
     const soldOut = p.sold_out ?? Number(p.stock_qty || 0) <= 0;
     if (soldOut) return;
 
-    const imgSrc = resolveImg(p.image_url ?? p.image);
+    const imgSrc = resolveImg(p.image_url ?? p.image, p.id);
+
     const qty = getQty(p.id);
 
     if (qty === 0) {
@@ -131,6 +148,7 @@ export default function Menu() {
 
       <div className="container">
         <h2>Healthy Bites Menu</h2>
+
         <p style={{ marginTop: 6, color: "#444" }}>
           Choose your bowl — fresh, clean, and delicious.
         </p>
@@ -150,29 +168,48 @@ export default function Menu() {
         </div>
 
         <div className="grid">
+
           {loading ? (
-            Array.from({ length: 8 }).map((_, i) => <MenuSkeletonCard key={i} />)
+
+            Array.from({ length: 8 }).map((_, i) => (
+              <MenuSkeletonCard key={i} />
+            ))
+
           ) : filtered.length === 0 ? (
+
             <div className="card" style={{ padding: 16 }}>
               No items found.
             </div>
+
           ) : (
+
             filtered.map((p) => {
-              const soldOut = p.sold_out ?? Number(p.stock_qty || 0) <= 0;
-              const imgSrc = resolveImg(p.image_url || p.image || "");
+
+              const soldOut =
+                p.sold_out ?? Number(p.stock_qty || 0) <= 0;
+
+              const imgSrc = resolveImg(
+                p.image_url || p.image,
+                p.id
+              );
+
               const qty = getQty(p.id);
 
               return (
                 <div key={p.id} className="card">
+
                   <img
                     src={imgSrc}
                     alt={p.name}
                     className="card-img"
                     loading="lazy"
-                    onError={(e) => (e.currentTarget.src = salad1)}
+                    onError={(e) => {
+                      e.currentTarget.src = salad1;
+                    }}
                   />
 
                   <div className="card-body">
+
                     <div className="row">
                       <h3>{p.name}</h3>
                       <strong>₹{p.price}</strong>
@@ -180,29 +217,70 @@ export default function Menu() {
 
                     <div className="chips">
                       <span className="chip">{p.category}</span>
-                      {soldOut && <span className="chip danger">Sold Out</span>}
+                      {soldOut && (
+                        <span className="chip danger">
+                          Sold Out
+                        </span>
+                      )}
                     </div>
 
                     {soldOut ? (
-                      <button className="btn disabled" disabled type="button">
+
+                      <button
+                        className="btn disabled"
+                        disabled
+                        type="button"
+                      >
                         Not Available
                       </button>
+
                     ) : qty > 0 ? (
-                      <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-                        <button className="btn" onClick={() => dec(p)}>−</button>
-                        <div style={{ fontWeight: 900 }}>{qty}</div>
-                        <button className="btn" onClick={() => inc(p)}>+</button>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 10,
+                          marginTop: 10,
+                        }}
+                      >
+                        <button
+                          className="btn"
+                          onClick={() => dec(p)}
+                        >
+                          −
+                        </button>
+
+                        <div style={{ fontWeight: 900 }}>
+                          {qty}
+                        </div>
+
+                        <button
+                          className="btn"
+                          onClick={() => inc(p)}
+                        >
+                          +
+                        </button>
                       </div>
+
                     ) : (
-                      <button className="btn" onClick={() => inc(p)}>
+
+                      <button
+                        className="btn"
+                        onClick={() => inc(p)}
+                      >
                         Add to Cart
                       </button>
+
                     )}
+
                   </div>
                 </div>
               );
+
             })
+
           )}
+
         </div>
 
         <p
@@ -215,6 +293,7 @@ export default function Menu() {
         >
           Developed by Priti Bedre
         </p>
+
       </div>
     </>
   );
