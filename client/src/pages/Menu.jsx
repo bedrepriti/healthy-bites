@@ -10,25 +10,14 @@ const CATEGORIES = ["All", "Veg", "Non-Veg", "Vegan", "Lactose-Free"];
 /* ============================
    IMAGE RESOLVER
 ============================ */
-function resolveImg(raw, id) {
-  // Cloudinary / full URL
+// FILE: client/src/pages/Menu.jsx
+
+function resolveImg(raw) {
+  // Use Cloudinary URL if it exists
   if (raw && raw.startsWith("http")) return raw;
 
-  // Backend uploads
-  if (raw && raw.includes("uploads")) {
-    const path = raw.replace(/^\/+/, "");
-    return `${API_BASE}/${path}`;
-  }
-
-  // Local fallback images from public folder
-  const localImages = {
-    1: "/assets/salad1.png",
-    2: "/assets/salad2.png",
-    3: "/assets/salad3.png",
-    4: "/assets/salad4.png",
-  };
-
-  return localImages[id] || "/assets/fallback.png";
+  // Fallback to local image
+  return "/assets/fallback.png";
 }
 
 /* ============================
@@ -181,7 +170,7 @@ export default function Menu() {
                 return (
                   <div key={p.id} className="card">
                     <img
-  src={resolveImg(p.image_url || p.image, p.id)}
+  src={resolveImg(p.image_url || p.image)}
   alt={p.name}
   onError={(e) => { e.currentTarget.src = "/assets/fallback.png"; }}
 />
