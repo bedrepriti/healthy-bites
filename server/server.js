@@ -19,8 +19,15 @@ const { notifyTelegram } = require("./src/utils/telegram");
 const app = express();
 
 /* ======================================================
-   ✅ CORS CONFIG — AUTO ALLOW VERCEL + LOCAL
+   ✅ CORS CONFIG — MULTIPLE FRONTENDS (CLIENT_ORIGIN_1/2/3)
 ====================================================== */
+
+const allowedOrigins = [
+  process.env.CLIENT_ORIGIN,
+  process.env.CLIENT_ORIGIN_2,
+  process.env.CLIENT_ORIGIN_3,
+  "http://localhost:5173",
+].filter(Boolean);
 
 app.use(
   cors({
@@ -28,11 +35,7 @@ app.use(
       // allow server-to-server / Postman / CURL
       if (!origin) return callback(null, true);
 
-      // allow localhost (development)
-      if (origin.startsWith("http://localhost")) return callback(null, true);
-
-      // allow any deployed Vercel frontend
-      if (origin.endsWith(".vercel.app")) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
 
       // block everything else
       return callback(new Error("CORS blocked: " + origin));
