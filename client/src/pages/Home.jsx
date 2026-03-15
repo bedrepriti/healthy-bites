@@ -1,6 +1,9 @@
 import Navbar from "../components/common/Navbar";
+
 import "../styles/main.css";
 import { useNavigate } from "react-router-dom";
+import heroBg from "../assets/images/hero-bg.png";
+
 
 export default function Home() {
   const navigate = useNavigate();
@@ -12,7 +15,7 @@ export default function Home() {
       <section
         style={{
           height: "90vh",
-          backgroundImage: "url('/assets/images/hero-bg.png')",
+          backgroundImage: `url(${heroBg})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           display: "flex",
