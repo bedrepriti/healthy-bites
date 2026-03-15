@@ -1,40 +1,39 @@
+// FILE: client/src/pages/Menu.jsx
+
 import Navbar from "../components/common/Navbar";
 import { useCart } from "../context/CartContext";
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../utils/apiBase";
 
-import salad1 from "../assets/images/salad1.png";
-import salad2 from "../assets/images/salad2.png";
-import salad3 from "../assets/images/salad3.png";
-import salad4 from "../assets/images/salad4.png";
-
-
 const CATEGORIES = ["All", "Veg", "Non-Veg", "Vegan", "Lactose-Free"];
 
-/* FIXED IMAGE RESOLVER */
+/* ============================
+   IMAGE RESOLVER
+============================ */
 function resolveImg(raw, id) {
+  // Cloudinary / full URL
+  if (raw && raw.startsWith("http")) return raw;
 
-  // if backend sends full cloudinary / url image
-  if (raw && raw.startsWith("http")) {
-    return raw;
-  }
-
-  // if backend sends uploads folder image
+  // Backend uploads
   if (raw && raw.includes("uploads")) {
-    return `${API_BASE}/${raw.replace(/^\/+/, "")}`;
+    const path = raw.replace(/^\/+/, "");
+    return `${API_BASE}/${path}`;
   }
 
-  // fallback local images
+  // Local fallback images from public folder
   const localImages = {
-    1: salad1,
-    2: salad2,
-    3: salad3,
-    4: salad4
+    1: "/assets/salad1.png",
+    2: "/assets/salad2.png",
+    3: "/assets/salad3.png",
+    4: "/assets/salad4.png",
   };
 
-  return localImages[id] || salad1;
+  return localImages[id] || "/assets/fallback.png";
 }
 
+/* ============================
+   MENU SKELETON CARD
+============================ */
 function MenuSkeletonCard() {
   return (
     <div className="card">
@@ -52,14 +51,14 @@ function MenuSkeletonCard() {
   );
 }
 
+/* ============================
+   MENU COMPONENT
+============================ */
 export default function Menu() {
-
   const { items, addToCart, updateQty, removeFromCart } = useCart();
-
   const [products, setProducts] = useState([]);
   const [active, setActive] = useState("All");
   const [loading, setLoading] = useState(true);
-
   const [toast, setToast] = useState("");
 
   const showToast = (msg) => {
@@ -69,15 +68,13 @@ export default function Menu() {
   };
 
   useEffect(() => {
-  setLoading(true);
-
-  fetch(`${API_BASE}/api/products`)
-    .then((r) => r.json())
-    .then((data) => setProducts(Array.isArray(data) ? data : []))
-    .catch(() => setProducts([]))
-    .finally(() => setLoading(false));
-
-}, []);
+    setLoading(true);
+    fetch(`${API_BASE}/api/products`)
+      .then((r) => r.json())
+      .then((data) => setProducts(Array.isArray(data) ? data : []))
+      .catch(() => setProducts([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(() => {
     if (active === "All") return products;
@@ -94,7 +91,6 @@ export default function Menu() {
     if (soldOut) return;
 
     const imgSrc = resolveImg(p.image_url ?? p.image, p.id);
-
     const qty = getQty(p.id);
 
     if (qty === 0) {
@@ -148,7 +144,6 @@ export default function Menu() {
 
       <div className="container">
         <h2>Healthy Bites Menu</h2>
-
         <p style={{ marginTop: 6, color: "#444" }}>
           Choose your bowl — fresh, clean, and delicious.
         </p>
@@ -168,132 +163,64 @@ export default function Menu() {
         </div>
 
         <div className="grid">
+          {loading
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <MenuSkeletonCard key={i} />
+              ))
+            : filtered.length === 0
+            ? (
+                <div className="card" style={{ padding: 16 }}>
+                  No items found.
+                </div>
+              )
+            : filtered.map((p) => {
+                const soldOut = p.sold_out ?? Number(p.stock_qty || 0) <= 0;
+                const imgSrc = resolveImg(p.image_url || p.image, p.id);
+                const qty = getQty(p.id);
 
-          {loading ? (
+                return (
+                  <div key={p.id} className="card">
+                    <img
+  src={resolveImg(p.image_url || p.image, p.id)}
+  alt={p.name}
+  onError={(e) => { e.currentTarget.src = "/assets/fallback.png"; }}
+/>
 
-            Array.from({ length: 8 }).map((_, i) => (
-              <MenuSkeletonCard key={i} />
-            ))
-
-          ) : filtered.length === 0 ? (
-
-            <div className="card" style={{ padding: 16 }}>
-              No items found.
-            </div>
-
-          ) : (
-
-            filtered.map((p) => {
-
-              const soldOut =
-                p.sold_out ?? Number(p.stock_qty || 0) <= 0;
-
-              const imgSrc = resolveImg(
-                p.image_url || p.image,
-                p.id
-              );
-
-              const qty = getQty(p.id);
-
-              return (
-                <div key={p.id} className="card">
-
-                  <img
-                    src={imgSrc}
-                    alt={p.name}
-                    className="card-img"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.src = salad1;
-                    }}
-                  />
-
-                  <div className="card-body">
-
-                    <div className="row">
-                      <h3>{p.name}</h3>
-                      <strong>₹{p.price}</strong>
-                    </div>
-
-                    <div className="chips">
-                      <span className="chip">{p.category}</span>
-                      {soldOut && (
-                        <span className="chip danger">
-                          Sold Out
-                        </span>
-                      )}
-                    </div>
-
-                    {soldOut ? (
-
-                      <button
-                        className="btn disabled"
-                        disabled
-                        type="button"
-                      >
-                        Not Available
-                      </button>
-
-                    ) : qty > 0 ? (
-
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 10,
-                          marginTop: 10,
-                        }}
-                      >
-                        <button
-                          className="btn"
-                          onClick={() => dec(p)}
-                        >
-                          −
-                        </button>
-
-                        <div style={{ fontWeight: 900 }}>
-                          {qty}
-                        </div>
-
-                        <button
-                          className="btn"
-                          onClick={() => inc(p)}
-                        >
-                          +
-                        </button>
+                    <div className="card-body">
+                      <div className="row">
+                        <h3>{p.name}</h3>
+                        <strong>₹{p.price}</strong>
                       </div>
 
-                    ) : (
+                      <div className="chips">
+                        <span className="chip">{p.category}</span>
+                        {soldOut && <span className="chip danger">Sold Out</span>}
+                      </div>
 
-                      <button
-                        className="btn"
-                        onClick={() => inc(p)}
-                      >
-                        Add to Cart
-                      </button>
-
-                    )}
-
+                      {soldOut ? (
+                        <button className="btn disabled" disabled type="button">
+                          Not Available
+                        </button>
+                      ) : qty > 0 ? (
+                        <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+                          <button className="btn" onClick={() => dec(p)}>−</button>
+                          <div style={{ fontWeight: 900 }}>{qty}</div>
+                          <button className="btn" onClick={() => inc(p)}>+</button>
+                        </div>
+                      ) : (
+                        <button className="btn" onClick={() => inc(p)}>
+                          Add to Cart
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-
-            })
-
-          )}
-
+                );
+              })}
         </div>
 
-        <p
-          style={{
-            textAlign: "center",
-            marginTop: "40px",
-            fontSize: "12px",
-            color: "#888",
-          }}
-        >
+        <p style={{ textAlign: "center", marginTop: "40px", fontSize: "12px", color: "#888" }}>
           Developed by Priti Bedre
         </p>
-
       </div>
     </>
   );

@@ -2,7 +2,7 @@ import Navbar from "../components/common/Navbar";
 
 import "../styles/main.css";
 import { useNavigate } from "react-router-dom";
-import heroBg from "../assets/images/hero-bg.png";
+const heroBg = "/assets/hero-bg.png"; // ✅ correct
 
 
 export default function Home() {
