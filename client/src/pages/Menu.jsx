@@ -69,15 +69,15 @@ export default function Menu() {
   };
 
   useEffect(() => {
-    setLoading(true);
+  setLoading(true);
 
-    fetch(`${API_BASE}/api/products`)
-      .then((r) => r.json())
-      .then((data) => setProducts(Array.isArray(data) ? data : []))
-      .catch(() => setProducts([]))
-      .finally(() => setLoading(false));
+  fetch(`${API_BASE}/api/products`)
+    .then((r) => r.json())
+    .then((data) => setProducts(Array.isArray(data) ? data : []))
+    .catch(() => setProducts([]))
+    .finally(() => setLoading(false));
 
-  }, []);
+}, []);
 
   const filtered = useMemo(() => {
     if (active === "All") return products;

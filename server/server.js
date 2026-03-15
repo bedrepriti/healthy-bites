@@ -16,29 +16,25 @@ const productRoutes = require("./src/routes/productRoutes");
 const db = require("./src/config/db");
 const { notifyTelegram } = require("./src/utils/telegram");
 
-
 const app = express();
 
 /* ======================================================
-   ✅ CORS CONFIG — MULTIPLE ORIGINS (Vercel + Local)
+   ✅ CORS CONFIG — AUTO ALLOW VERCEL + LOCAL
 ====================================================== */
-
-const allowedOrigins = [
-  process.env.CLIENT_ORIGIN,     // https://healthy-bites-lac.vercel.app
-  process.env.CLIENT_ORIGIN_2,   // https://healthy-bites-git-main-....vercel.app
-  "http://localhost:5173",
-].filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow server-to-server / Postman
+      // allow server-to-server / Postman / CURL
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+      // allow localhost (development)
+      if (origin.startsWith("http://localhost")) return callback(null, true);
 
+      // allow any deployed Vercel frontend
+      if (origin.endsWith(".vercel.app")) return callback(null, true);
+
+      // block everything else
       return callback(new Error("CORS blocked: " + origin));
     },
     credentials: true,
@@ -67,6 +63,7 @@ app.get("/", (req, res) => {
 app.get("/api/health", (req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
 });
+
 app.get("/api/test-telegram", async (req, res) => {
   try {
     await notifyTelegram("✅ Telegram test from backend working!");
@@ -75,7 +72,6 @@ app.get("/api/test-telegram", async (req, res) => {
     res.status(500).json({ ok: false, error: e?.message || String(e) });
   }
 });
-
 
 app.get("/api/db-ping", (req, res) => {
   db.getConnection((err, conn) => {
@@ -97,7 +93,7 @@ app.get("/api/db-ping", (req, res) => {
 });
 
 /* ======================================================
-   STATIC UPLOADS (still safe if unused)
+   STATIC UPLOADS
 ====================================================== */
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
@@ -107,7 +103,7 @@ if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 if (!fs.existsSync(PRODUCT_UPLOAD_DIR))
   fs.mkdirSync(PRODUCT_UPLOAD_DIR, { recursive: true });
 
- app.use("/uploads", express.static(UPLOAD_DIR));
+app.use("/uploads", express.static(UPLOAD_DIR));
 
 /* ======================================================
    ROUTES
@@ -130,7 +126,12 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (origin.startsWith("http://localhost")) return callback(null, true);
+      if (origin.endsWith(".vercel.app")) return callback(null, true);
+      return callback(new Error("CORS blocked: " + origin));
+    },
     credentials: true,
   },
 });
