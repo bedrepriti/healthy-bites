@@ -49,10 +49,11 @@ router.get("/products", requireAdmin, (req, res) => {
   db.query("SELECT * FROM products ORDER BY id DESC", (err, rows) => {
     if (err) return res.status(500).json({ message: "DB error", error: err.message });
     const out = (rows || []).map((r) => ({
-      ...r,
-      image_url: r.image || null,
-      sold_out: Number(r.stock_qty || 0) <= 0,
-    }));
+  ...r,
+  image_url: r.image_public_id || null, // now frontend will get the real URL
+  sold_out: Number(r.stock_qty || 0) <= 0,
+}));
+
     res.json(out);
   });
 });

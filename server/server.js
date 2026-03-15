@@ -107,7 +107,7 @@ if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 if (!fs.existsSync(PRODUCT_UPLOAD_DIR))
   fs.mkdirSync(PRODUCT_UPLOAD_DIR, { recursive: true });
 
-// app.use("/uploads", express.static(UPLOAD_DIR));
+ app.use("/uploads", express.static(UPLOAD_DIR));
 
 /* ======================================================
    ROUTES
