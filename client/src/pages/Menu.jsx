@@ -2,21 +2,22 @@ import Navbar from "../components/common/Navbar";
 import { useCart } from "../context/CartContext";
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../utils/apiBase";
+import salad1 from "../assets/salad1.png";
+import salad2 from "../assets/salad2.png";
+import salad3 from "../assets/salad3.png";
+import salad4 from "../assets/salad4.png";
 
 const CATEGORIES = ["All", "Veg", "Non-Veg", "Vegan", "Lactose-Free"];
 
 function resolveImg(raw) {
-  if (!raw) return "/assets/images/salad1.png";
+  if (!raw) return salad1;
 
-  // Cloudinary or full URL
   if (raw.startsWith("http")) return raw;
 
-  // old local uploads
   if (raw.includes("uploads")) return `${API_BASE}/${raw.replace(/^\/+/, "")}`;
 
-  return "/assets/images/salad1.png";
+  return salad1;
 }
-
 
 function MenuSkeletonCard() {
   return (
@@ -43,11 +44,6 @@ export default function Menu() {
   const [active, setActive] = useState("All");
   const [loading, setLoading] = useState(true);
 
-  const [ratingStats, setRatingStats] = useState({
-    avgRating: 0,
-    totalReviews: 0,
-  });
-
   const [toast, setToast] = useState("");
 
   const showToast = (msg) => {
@@ -67,18 +63,6 @@ export default function Menu() {
 
   }, []);
 
-  useEffect(() => {
-    fetch(`${API_BASE}/api/reviews/stats/average`)
-      .then((r) => r.json())
-      .then((d) =>
-        setRatingStats({
-          avgRating: Number(d?.avgRating || 0),
-          totalReviews: Number(d?.totalReviews || 0),
-        })
-      )
-      .catch(() => {});
-  }, []);
-
   const filtered = useMemo(() => {
     if (active === "All") return products;
     return products.filter((p) => p.category === active);
@@ -94,7 +78,6 @@ export default function Menu() {
     if (soldOut) return;
 
     const imgSrc = resolveImg(p.image_url ?? p.image);
-
     const qty = getQty(p.id);
 
     if (qty === 0) {
@@ -127,7 +110,7 @@ export default function Menu() {
     <>
       <Navbar />
 
-      {toast ? (
+      {toast && (
         <div
           style={{
             position: "fixed",
@@ -144,7 +127,7 @@ export default function Menu() {
         >
           {toast}
         </div>
-      ) : null}
+      )}
 
       <div className="container">
         <h2>Healthy Bites Menu</h2>
@@ -186,9 +169,7 @@ export default function Menu() {
                     alt={p.name}
                     className="card-img"
                     loading="lazy"
-                    onError={(e) =>
-                      (e.currentTarget.src = "/assets/images/salad1.png")
-                    }
+                    onError={(e) => (e.currentTarget.src = salad1)}
                   />
 
                   <div className="card-body">
@@ -224,7 +205,6 @@ export default function Menu() {
           )}
         </div>
 
-        {/* ⭐ Footer Credit */}
         <p
           style={{
             textAlign: "center",
